@@ -14,12 +14,14 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS
+  // Enable CORS - Allow all requests from anywhere
   app.enableCors({
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type,Authorization',
-    credentials: true,
+    origin: '*', // Allow all origins
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: '*', // Allow all headers
+    credentials: false, // Set to false when origin is '*'
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   await app.listen(3005);

@@ -1,0 +1,16 @@
+node_modules
+.env
+.env.*
+!.env.example
+npm-debug.log
+.DS_Store
+coverage
+.vscode
+.idea
+*.log
+test
+*.spec.ts
+.git
+.eslintrc.js
+.prettierrc
+

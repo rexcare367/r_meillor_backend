@@ -233,6 +233,7 @@ Comprehensive documentation is available in the `docs/` folder:
 - **[Architecture Guidelines](docs/ARCHITECTURE.md)** - Project structure and best practices
 - **[API Examples](docs/API_EXAMPLES.md)** - Complete API usage examples with code
 - **[Environment Setup](docs/ENV_EXAMPLE.md)** - Environment variable configuration
+- **[Vercel Deployment](docs/VERCEL_DEPLOYMENT.md)** - Deploy to Vercel in minutes
 
 ## Key Features
 
