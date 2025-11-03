@@ -24,7 +24,10 @@ export interface PaginatedResponse<T> {
 export class CoinsService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async findAll(queryDto: QueryCoinsDto): Promise<PaginatedResponse<Coin>> {
+  async findAll(
+    queryDto: QueryCoinsDto,
+    userId?: string,
+  ): Promise<PaginatedResponse<Coin>> {
     const {
       page = 1,
       limit = 10,
@@ -125,8 +128,21 @@ export class CoinsService {
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
 
+    let coinsWithFavorites = data as Coin[];
+
+    // Add favorite status for authenticated users
+    if (userId && data && data.length > 0) {
+      const coinIds = data.map((coin) => coin.id);
+      const favoriteMap = await this.checkFavorites(userId, coinIds);
+
+      coinsWithFavorites = data.map((coin) => ({
+        ...coin,
+        is_favorite: favoriteMap.get(coin.id) || false,
+      })) as Coin[];
+    }
+
     return {
-      data: data as Coin[],
+      data: coinsWithFavorites,
       pagination: {
         page,
         limit,
@@ -136,7 +152,35 @@ export class CoinsService {
     };
   }
 
-  async findOne(id: string): Promise<Coin> {
+  /**
+   * Check if specific coins are favorited by user
+   */
+  private async checkFavorites(
+    userId: string,
+    coinIds: string[],
+  ): Promise<Map<string, boolean>> {
+    const client = this.databaseService.getClient();
+
+    const { data, error } = await client
+      .from('favorites')
+      .select('coin_id')
+      .eq('user_id', userId)
+      .in('coin_id', coinIds);
+
+    if (error) {
+      // If there's an error checking favorites, just return empty map
+      // Don't fail the entire request
+      return new Map<string, boolean>();
+    }
+
+    const favoriteMap = new Map<string, boolean>();
+    coinIds.forEach((id) => favoriteMap.set(id, false));
+    (data || []).forEach((fav) => favoriteMap.set(fav.coin_id, true));
+
+    return favoriteMap;
+  }
+
+  async findOne(id: string, userId?: string): Promise<Coin> {
     if (!this.isValidUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
@@ -152,7 +196,18 @@ export class CoinsService {
       throw new NotFoundException(`Coin with ID "${id}" not found`);
     }
 
-    return data as Coin;
+    let coin = data as Coin;
+
+    // Add favorite status for authenticated users
+    if (userId) {
+      const favoriteMap = await this.checkFavorites(userId, [id]);
+      coin = {
+        ...coin,
+        is_favorite: favoriteMap.get(id) || false,
+      };
+    }
+
+    return coin;
   }
 
   async create(createCoinDto: CreateCoinDto): Promise<Coin> {
@@ -221,23 +276,21 @@ export class CoinsService {
   async getStatistics() {
     const client = this.databaseService.getClient();
 
-    const [totalCoins, soldCoins, featuredCoins, newCoins] = await Promise.all(
-      [
-        client.from('coins').select('*', { count: 'exact', head: true }),
-        client
-          .from('coins')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_sold', true),
-        client
-          .from('coins')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_featured', true),
-        client
-          .from('coins')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_new', true),
-      ],
-    );
+    const [totalCoins, soldCoins, featuredCoins, newCoins] = await Promise.all([
+      client.from('coins').select('*', { count: 'exact', head: true }),
+      client
+        .from('coins')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_sold', true),
+      client
+        .from('coins')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_featured', true),
+      client
+        .from('coins')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_new', true),
+    ]);
 
     return {
       total: totalCoins.count || 0,
@@ -253,4 +306,3 @@ export class CoinsService {
     return uuidRegex.test(uuid);
   }
 }
-

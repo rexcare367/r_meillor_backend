@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { CoinsModule } from './coins/coins.module';
+import { AuthModule } from './auth/auth.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/guards/auth.guard';
 
 @Module({
   imports: [
@@ -12,8 +15,15 @@ import { CoinsModule } from './coins/coins.module';
     DatabaseModule,
     AuthModule,
     CoinsModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard, // Apply AuthGuard globally
+    },
+  ],
 })
 export class AppModule {}

@@ -8,4 +8,3 @@ import { CoinsController } from './coins.controller';
   exports: [CoinsService],
 })
 export class CoinsModule {}
-

@@ -77,4 +77,3 @@ export class QueryCoinsDto {
   @IsString()
   lsp_eligible?: string; // 'true' | 'false'
 }
-

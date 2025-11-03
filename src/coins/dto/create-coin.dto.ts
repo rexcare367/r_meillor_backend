@@ -103,4 +103,3 @@ export class CreateCoinDto {
   @IsDateString()
   scraped_at?: Date;
 }
-

@@ -1,22 +1,27 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { JwtAuthGuard } from './auth/guards/jwt.auth.guard';
+import { CurrentUser, Public } from './auth/decorators';
+import { User } from '@supabase/supabase-js';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
+  @Public() // Public route
   getHello(): string {
     return this.appService.getHello();
   }
 
   @Get('/protected')
-  @UseGuards(JwtAuthGuard)
-  async protected(@Req() req) {
+  async protected(@CurrentUser() user: User) {
     return {
-      "message": "AuthGuard works 🎉",
-      "authenticated_user": req.user
+      message: 'Authentication works! 🎉',
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 }

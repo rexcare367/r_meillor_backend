@@ -29,4 +29,3 @@ export class DatabaseService implements OnModuleInit {
     return this.supabase;
   }
 }
-

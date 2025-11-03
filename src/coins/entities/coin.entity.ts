@@ -26,5 +26,5 @@ export class Coin {
   scraped_at: Date | null;
   created_at: Date;
   updated_at: Date | null;
+  is_favorite?: boolean; // Added dynamically for authenticated users
 }
-
