@@ -26,9 +26,7 @@ export class AuthService {
    * Uses Supabase Admin client to verify the access token
    */
   async verifyToken(token: string): Promise<User> {
-    console.log('token', token);
     const { data, error } = await this.supabaseAdmin.auth.getUser(token);
-    console.log('data, error', data, error);
     if (error || !data.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }

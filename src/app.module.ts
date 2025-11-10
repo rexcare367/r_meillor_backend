@@ -6,6 +6,9 @@ import { DatabaseModule } from './database/database.module';
 import { CoinsModule } from './coins/coins.module';
 import { AuthModule } from './auth/auth.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { BillingModule } from './billing/billing.module';
+import { ProfileModule } from './profile/profile.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/guards/auth.guard';
 
@@ -16,6 +19,9 @@ import { AuthGuard } from './auth/guards/auth.guard';
     AuthModule,
     CoinsModule,
     FavoritesModule,
+    SubscriptionsModule,
+    BillingModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [

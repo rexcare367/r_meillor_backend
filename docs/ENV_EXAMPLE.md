@@ -16,6 +16,12 @@ JWT_SECRET=your-jwt-secret-key
 # Server Configuration
 PORT=3005
 NODE_ENV=development
+
+# Stripe Configuration
+# Available in Stripe Dashboard https://dashboard.stripe.com/apikeys
+STRIPE_API_KEY=sk_test_your_key
+# Webhook secret from Stripe CLI or Dashboard (Developers > Webhooks)
+STRIPE_WEBHOOK_SECRET=whsec_your_secret
 ```
 
 ## Getting Supabase Credentials
@@ -40,20 +46,22 @@ NODE_ENV=development
 ## Environment-Specific Configurations
 
 ### Development
+
 ```env
 NODE_ENV=development
 PORT=3005
 ```
 
 ### Production
+
 ```env
 NODE_ENV=production
 PORT=3005
 ```
 
 ### Testing
+
 ```env
 NODE_ENV=test
 PORT=3006
 ```
-
