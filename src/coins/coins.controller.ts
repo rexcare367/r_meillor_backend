@@ -19,10 +19,14 @@ import { QueryCoinsDto } from './dto/query-coins.dto';
 import { CurrentUser, Public, Roles } from '../auth/decorators';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { User } from '@supabase/supabase-js';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Controller('coins')
 export class CoinsController {
-  constructor(private readonly coinsService: CoinsService) {}
+  constructor(
+    private readonly coinsService: CoinsService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
   @Get()
   @Public() // Public route - no authentication required
@@ -31,6 +35,15 @@ export class CoinsController {
     @Query(new ValidationPipe({ transform: true })) queryDto: QueryCoinsDto,
     @CurrentUser() user?: User,
   ) {
+    // Check if user has premium subscription
+    let isPremium = false;
+    if (user) {
+      const activeSubscription = await this.subscriptionsService.findMyActive(
+        user.id,
+      );
+      isPremium = !!activeSubscription;
+    }
+
     // Apply different limits based on authentication status
     if (user) {
       // Authenticated users: default to 20 if not specified
@@ -42,8 +55,8 @@ export class CoinsController {
       // Unauthenticated users: cap at 5 regardless of what they request
       queryDto.limit = Math.min(queryDto.limit || 5, 5);
     }
-    // Pass user ID to service to include favorite status
-    return this.coinsService.findAll(queryDto, user?.id);
+    // Pass user ID and premium status to service
+    return this.coinsService.findAll(queryDto, user?.id, isPremium);
   }
 
   @Get('statistics')
@@ -57,8 +70,16 @@ export class CoinsController {
   @Public() // Public route - no authentication required
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string, @CurrentUser() user?: User) {
-    // Pass user ID to service to include favorite status
-    return this.coinsService.findOne(id, user?.id);
+    // Check if user has premium subscription
+    let isPremium = false;
+    if (user) {
+      const activeSubscription = await this.subscriptionsService.findMyActive(
+        user.id,
+      );
+      isPremium = !!activeSubscription;
+    }
+    // Pass user ID and premium status to service
+    return this.coinsService.findOne(id, user?.id, isPremium);
   }
 
   @Post()

@@ -27,6 +27,7 @@ export class CoinsService {
   async findAll(
     queryDto: QueryCoinsDto,
     userId?: string,
+    isPremium: boolean = false,
   ): Promise<PaginatedResponse<Coin>> {
     const {
       page = 1,
@@ -50,6 +51,15 @@ export class CoinsService {
 
     const client = this.databaseService.getClient();
     let query = client.from('coins').select('*', { count: 'exact' });
+
+    // Apply 24-hour delay for non-premium users (free registered users and visitors)
+    // Premium users see all coins immediately, others only see coins older than 24 hours
+    if (!isPremium) {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+      const delayThreshold = twentyFourHoursAgo.toISOString();
+      query = query.lte('created_at', delayThreshold);
+    }
 
     // Apply search filter (searches across multiple text fields)
     if (search) {
@@ -180,17 +190,28 @@ export class CoinsService {
     return favoriteMap;
   }
 
-  async findOne(id: string, userId?: string): Promise<Coin> {
+  async findOne(
+    id: string,
+    userId?: string,
+    isPremium: boolean = false,
+  ): Promise<Coin> {
     if (!this.isValidUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
 
     const client = this.databaseService.getClient();
-    const { data, error } = await client
-      .from('coins')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let query = client.from('coins').select('*').eq('id', id);
+
+    // Apply 24-hour delay for non-premium users (free registered users and visitors)
+    // Premium users see all coins immediately, others only see coins older than 24 hours
+    if (!isPremium) {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+      const delayThreshold = twentyFourHoursAgo.toISOString();
+      query = query.lte('created_at', delayThreshold);
+    }
+
+    const { data, error } = await query.single();
 
     if (error || !data) {
       throw new NotFoundException(`Coin with ID "${id}" not found`);
